@@ -190,6 +190,16 @@ fn rpc_request_encryption() {
 
 #[test]
 fn integrity_only_wrap_decryption() {
+    assert_integrity_only_wrap_decryption(Some(CipherSuite::Aes256CtsHmacSha196));
+}
+
+#[test]
+fn integrity_only_wrap_decryption_uses_active_key_when_cipher_is_unset() {
+    assert_integrity_only_wrap_decryption(None);
+}
+
+// oracle: RFC 4121 §4.2 and §4.2.4, active context key and integrity-only checksum.
+fn assert_integrity_only_wrap_decryption(encryption_type: Option<CipherSuite>) {
     // A standards-compliant SASL/GSSAPI peer (RFC 4752 / RFC 4121 §4.2.4) may
     // send an integrity-only (conf=false) Wrap token: the payload is carried in
     // the clear followed by the get_mic checksum, right-rotated by RRC. This
@@ -248,7 +258,7 @@ fn integrity_only_wrap_decryption() {
         },
         auth_identity: None,
         encryption_params: EncryptionParams {
-            encryption_type: Some(CipherSuite::Aes256CtsHmacSha196),
+            encryption_type,
             session_key: None,
             sub_session_key: Some(session_key.to_vec().into()),
             sspi_encrypt_key_usage: INITIATOR_SEAL,
